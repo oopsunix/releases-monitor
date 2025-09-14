@@ -1,0 +1,75 @@
+name: Releases Monitor
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'    # 每 6 小时检查一次
+  workflow_dispatch:         # 允许手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Ensure repos.json
+      run: |
+        [[ -f repos.json ]] || echo '{}' > repos.json
+
+    - name: Install jq
+      run: sudo apt-get -qq update && sudo apt-get -qq install -y jq
+
+    - name: Scan repositories
+      id: scan
+      run: |
+        changed=false
+        notice=""
+        # 从 repos.json 中提取所有仓库名称
+        repos=$(jq -r 'keys[]' repos.json)
+        for repo in $repos; do
+          echo "==> $repo"
+          api="https://api.github.com/repos/${repo}/releases/latest"
+          json=$(curl -sL "$api" -H "Authorization: Bearer ${{ github.token }}")
+          tag=$(jq -r '.tag_name // empty' <<< "$json")
+          url=$(jq -r '.html_url // empty' <<< "$json")
+          if [[ -z "$tag" ]]; then
+            echo "   ↳ no releases"; continue
+          fi
+
+          last=$(jq -r --arg repo "$repo" '.[$repo] // empty' repos.json)
+          if [[ "$tag" != "$last" ]]; then
+            echo "   ↳ NEW $tag"
+            changed=true
+            notice="${notice}\n📢 ${repo} 发布新版本：${tag}\n👉 ${url}\n"
+            tmp=$(mktemp)
+            jq --arg repo "$repo" --arg tag "$tag" '.[$repo]=$tag' repos.json > "$tmp" && mv "$tmp" repos.json
+          else
+            echo "   ↳ up-to-date ($tag)"
+          fi
+        done
+        echo -e "$notice" > notice.txt
+        echo "changed=$changed" >> $GITHUB_OUTPUT
+
+    - name: Send message to Telegram
+      if: steps.scan.outputs.changed == 'true'
+      run: |
+        text=$(cat notice.txt)
+        # URL编码消息文本
+        encoded_text=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$text'))")
+        # 发送到 Telegram
+        curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+          -d "text=${encoded_text}" \
+          -d "parse_mode=HTML"
+
+    - name: Commit new state
+      if: steps.scan.outputs.changed == 'true'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add repos.json
+        git commit -m "bot: update release state [skip ci]"
+        git push
