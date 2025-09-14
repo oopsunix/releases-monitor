@@ -1,4 +1,4 @@
-name: Releases Monitor
+name: 🤖 Releases Monitor
 
 on:
   schedule:
@@ -54,13 +54,27 @@ jobs:
 
     - name: Send message to Telegram
       if: steps.scan.outputs.changed == 'true'
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
-        text=$(cat notice.txt)
-        encoded_text=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$text'))")
-        curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-          -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-          -d "text=${encoded_text}" \
-          -d "parse_mode=HTML"
+        UPDATES=$(cat notice.txt)
+        
+        MESSAGE="🔔 版本发布通知
+
+        $UPDATES
+
+        ⏰ Time: $(date '+%H:%M:%S %d/%m/%Y')
+        🔗 Link: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        
+        if [ ! -z "$TELEGRAM_BOT_TOKEN" ] && [ ! -z "$TELEGRAM_CHAT_ID" ]; then
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="$MESSAGE" \
+            -d parse_mode="HTML" || echo "❌ Failed to send Telegram notification."
+        else
+          echo "⚠️ No configuration Telegram parameters, skip notifications."
+        fi
 
     - name: Commit new state
       if: steps.scan.outputs.changed == 'true'
