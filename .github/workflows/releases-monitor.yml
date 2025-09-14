@@ -27,7 +27,6 @@ jobs:
       run: |
         changed=false
         notice=""
-        # 从 repos.json 中提取所有仓库名称
         repos=$(jq -r 'keys[]' repos.json)
         for repo in $repos; do
           echo "==> $repo"
@@ -57,9 +56,7 @@ jobs:
       if: steps.scan.outputs.changed == 'true'
       run: |
         text=$(cat notice.txt)
-        # URL编码消息文本
         encoded_text=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$text'))")
-        # 发送到 Telegram
         curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
           -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
           -d "text=${encoded_text}" \
@@ -71,5 +68,5 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git add repos.json
-        git commit -m "bot: update release state [skip ci]"
+        git commit -m "bot: update release state"
         git push
