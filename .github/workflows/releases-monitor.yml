@@ -42,7 +42,18 @@ jobs:
           if [[ "$tag" != "$last" ]]; then
             echo "   ↳ NEW $tag"
             changed=true
-            notice="${notice}\n📢 ${repo} 发布新版本：${tag}\n👉 ${url}\n"
+            
+            # 获取 release notes
+            release_notes=$(jq -r '.body // "暂无更新说明"' <<< "$json")
+            # 限制 release notes 长度，避免消息过长
+            if [[ ${#release_notes} -gt 500 ]]; then
+              release_notes="${release_notes:0:500}..."
+            fi
+            
+            notice+="📢 ${repo} 发布新版本：${tag}\n\n"
+            notice+="👉 ${url}\n\n"
+            notice+="📝 更新说明：\n${release_notes}\n\n\n"
+            
             tmp=$(mktemp)
             jq --arg repo "$repo" --arg tag "$tag" '.[$repo]=$tag' repos.json > "$tmp" && mv "$tmp" repos.json
           else
@@ -58,14 +69,7 @@ jobs:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
-        UPDATES=$(cat notice.txt)
-        
-        MESSAGE="🔔 版本发布通知
-
-        $UPDATES
-
-        ⏰ Time: $(date '+%H:%M:%S %d/%m/%Y')
-        🔗 Link: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        MESSAGE=$(cat notice.txt)
         
         if [ ! -z "$TELEGRAM_BOT_TOKEN" ] && [ ! -z "$TELEGRAM_CHAT_ID" ]; then
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
