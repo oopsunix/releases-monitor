@@ -1,8 +1,17 @@
 {
   "amir20/dozzle": "v8.14.2",
   "dockpeek/dockpeek": "v1.6.3",
-  "certimate-go/certimate": "v0.3.27",
+  "sergi0g/cup": "v3.4.2",
+  "dani-garcia/vaultwarden": "v1.34.3",
   "jeessy2/ddns-go": "v6.12.4",
+  "certimate-go/certimate": "v0.3.27",
+  "louislam/uptime-kuma": "v1.24.0",
+  "umami-software/umami": "v2.19.0",
   "jxxghp/MoviePilot": "v2.8.1-1",
-  "thomiceli/opengist": "v1.11.0"
+  "thomiceli/opengist": "v1.11.0",
+  "schlagmichdoch/PairDrop": "v1.11.2",
+  "ellite/Wallos": "v4.3.0",
+  "open-webui/open-webui": "v0.6.31",
+  "filebrowser/filebrowser": "v2.44.0",
+  "cloudreve/Cloudreve": "v4.8.0"
 }

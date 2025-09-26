@@ -2,7 +2,7 @@ name: 🤖 Releases Monitor
 
 on:
   schedule:
-    - cron: '0 */6 * * *'    # 每 6 小时检查一次
+    - cron: '0 */1 * * *'    # 每 6 小时检查一次
   workflow_dispatch:         # 允许手动触发
 
 permissions:
@@ -37,7 +37,7 @@ jobs:
           if [[ -z "$tag" ]]; then
             echo "   ↳ no releases"; continue
           fi
-
+          
           last=$(jq -r --arg repo "$repo" '.[$repo] // empty' repos.json)
           if [[ "$tag" != "$last" ]]; then
             echo "   ↳ NEW $tag"
