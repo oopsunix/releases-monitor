@@ -4,7 +4,7 @@
   "sergi0g/cup": "v3.4.3",
   "dani-garcia/vaultwarden": "1.34.3",
   "jeessy2/ddns-go": "v6.13.0",
-  "certimate-go/certimate": "v0.4.1",
+  "certimate-go/certimate": "v0.4.2",
   "louislam/uptime-kuma": "2.0.2",
   "umami-software/umami": "v2.19.0",
   "jxxghp/MoviePilot": "v2.8.1-1",
@@ -14,6 +14,6 @@
   "open-webui/open-webui": "v0.6.34",
   "filebrowser/filebrowser": "v2.44.2",
   "cloudreve/Cloudreve": "4.9.2",
-  "HoshinoSuzumi/chronoframe": "v0.13.1",
+  "HoshinoSuzumi/chronoframe": "v0.14.0",
   "Afilmory/Afilmory": "v1.7.0"
 }
